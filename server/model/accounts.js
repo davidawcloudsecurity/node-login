@@ -100,6 +100,7 @@ module.exports.addNewAccount = function(newData, callback)
 					// append date stamp when record was created //
 						newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
 						accounts.insertOne(newData, callback);
+						console.log(newData);
 					});
 				}
 			});

@@ -5,7 +5,7 @@
 input(type='hidden', value= user._id)#userId
 
 #account-form-container.center-vertical
-	form.card.card-body.bg-light(method='post', style='min-width: 437px')#account-form
+	form.card.card-body.bg-light(method='post')#account-form
 		h2
 		h6#sub Please tell us a little about yourself.
 		hr
