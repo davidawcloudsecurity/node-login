@@ -1,38 +1,56 @@
+// Assuming you have already set up your Express app and connected to MongoDB
 
-$(document).ready(function(){
-	
-	var av = new AccountValidator();
-	var sc = new SignupController();
-	
-	$('#account-form').ajaxForm({
-		beforeSubmit : function(formData, jqForm, options){
-			return av.validateForm();
-		},
-		success	: function(responseText, status, xhr, $form){
-			if (status == 'success') $('.modal-alert').modal('show');
-		},
-		error : function(e){
-			if (e.responseText == 'email-taken'){
-				av.showInvalidEmail();
-			}	else if (e.responseText == 'username-taken'){
-				av.showInvalidUserName();
-			}
-		}
-	});
-	$('#name-tf').focus();
-	
-// customize the account signup form //
-	
-	$('#account-form h2').text('Signup');
-	$('#account-form #sub').text('Please tell us a little about yourself');
-	$('#account-form-btn1').html('Cancel');
-	$('#account-form-btn2').html('Submit');
-	$('#account-form-btn2').addClass('btn-primary');
-	
-// setup the alert that displays when an account is successfully created //
+// Import required modules
+const express = require('express');
+const router = express.Router();
+const Account = require('./models/account');
+const Role = require('./models/role');
 
-	$('.modal-alert').modal({ show:false, keyboard : false, backdrop : 'static' });
-	$('.modal-alert .modal-header h4').text('Account Created!');
-	$('.modal-alert .modal-body p').html('Your account has been created.</br>Click OK to return to the login page.');
+// Define the POST /signup route
+router.post('/signup', async (req, res) => {
+    // Extract signup data from the request body
+    const { name, email, user, pass, country } = req.body;
 
+    try {
+        // Check if email or username is already taken
+        const existingEmail = await Account.findOne({ email });
+        const existingUsername = await Account.findOne({ user });
+
+        if (existingEmail) {
+            return res.status(400).json({ error: 'email-taken' });
+        }
+
+        if (existingUsername) {
+            return res.status(400).json({ error: 'username-taken' });
+        }
+
+        // Create a new user document
+        const newUser = new Account({
+            name,
+            email,
+            user,
+            pass,
+            country
+        });
+
+        // Save the user document to MongoDB
+        await newUser.save();
+
+        // Optionally, create a role document for the user
+        const newRole = new Role({
+            // Role details
+        });
+        // Save the role document to MongoDB
+        await newRole.save();
+
+        // Return a success response
+        res.status(200).send('ok');
+    } catch (error) {
+        // Handle any errors that occur during signup
+        console.error('Error creating user:', error);
+        res.status(500).send('error-creating-user');
+    }
 });
+
+// Export the router
+module.exports = router;
