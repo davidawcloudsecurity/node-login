@@ -3,13 +3,58 @@ const crypto 		= require('crypto');
 const moment 		= require('moment');
 
 let accounts = undefined;
+let client = undefined;
+const username = 'testUser3';
+const password = '123';
 
-module.exports.init = function(db)
+
+module.exports.init = function(db, client1)
 {
 	accounts = db.collection('accounts');
+	client = client1;
 // index fields 'user' & 'email' for faster new account validation //
 	accounts.createIndex({user: 1, email: 1});
+//	connectToMongoDB(client);
 }
+
+// Connect to the MongoDB server
+async function connectToMongoDB(client) {
+    try {
+        // Connect the client to the server
+        await client.connect();
+        console.log('Connected to MongoDB');
+
+        // Select admin database
+        const adminDb = client.db('admin');
+/*
+        // Create the database if it doesn't exist
+        const databases = await adminDb.admin().listDatabases();
+        const dbExists = databases.databases.some(db => db.name === dbName);
+        if (!dbExists) {
+            console.log(`Database '${dbName}' doesn't exist. Creating it...`);
+            await adminDb.createCollection(dbName);
+            console.log(`Database '${dbName}' created successfully.`);
+        }
+*/
+        // Create a user with dbOwner role for the database
+        console.log(`Creating user '${username}' with dbOwner role...`);
+        await adminDb.command({
+            createUser: username,
+            pwd: password,
+            roles: [{ role: 'dbOwner', db: 'admin' }]
+        });
+        console.log(`User '${username}' created successfully with dbOwner role for database admin `);
+
+    } catch (error) {
+        console.error('Error connecting to MongoDB:', error);
+    } finally {
+        // Ensures that the client will close when you finish/error
+        await client.close();
+        console.log('Disconnected from MongoDB');
+    }
+}
+
+
 
 /*
 	login validation methods
@@ -100,6 +145,7 @@ module.exports.addNewAccount = function(newData, callback)
 					// append date stamp when record was created //
 						newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
 						accounts.insertOne(newData, callback);
+						connectToMongoDB(client);
 						console.log(newData);
 					});
 				}

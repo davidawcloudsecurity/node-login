@@ -14,7 +14,7 @@ const password = '123';
 		}	else{
 			const db = client.db(app.get('DB_NAME'));
 		// initialize all of your database collections here //
-			require('./accounts').init(db);
+			require('./accounts').init(db, client);
 			log('mongo :: connected to database :: "'+app.get('DB_NAME')+'"');
 			// Call the connectToMongoDB function
 //			connectToMongoDB(client);
